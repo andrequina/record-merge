@@ -3,22 +3,26 @@ module RecordMerge
     def initialize(source_dir, dest_dir)
       @source_dir = get_dir(source_dir)
       @dest_dir = get_dir(dest_dir)
+      @merged_dir = File.join(@dest_dir, 'merged')
+      Dir.mkdir(merged_dir) unless File.exist? @merged_dir
+      @patients_dir = File.join(@dest_dir, 'patients')
+      Dir.mkdir(@patients_dir) unless File.exist? @patients_dir
     end
     
     def merge
-      sorter = RecordMerge::Sorter.new(@dest_dir)
+      sorter = RecordMerge::Sorter.new(@patients_dir)
       Dir.glob(File.join(@source_dir, '*.*')).each do |file|
         sorter.sort(file)
       end
       
-      Dir.glob(File.join(@dest_dir, '*')) do |dir|
+      Dir.glob(File.join(@patients_dir, '*')) do |dir|
         if File.directory?(dir)
           merger = RecordMerge::Merger.new(dir)
           record = merger.merge_all
-          filename = File.join(@dest_dir, "#{record.medical_record_number}-merged.json")
+          filename = File.join(@merged_dir, "#{record.medical_record_number}-merged.json")
           File.open(filename,'w') do |file|
             file.write(record.as_document.to_json)
-          end
+        end
         end
       end
     end
